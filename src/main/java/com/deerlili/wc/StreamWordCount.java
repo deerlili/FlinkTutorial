@@ -2,6 +2,7 @@ package com.deerlili.wc;
 
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -17,8 +18,15 @@ public class StreamWordCount {
     public static void main(String[] args) throws Exception {
         // 1. 创建流式执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        // 从参数中提取端口号和主机
+        // 配置:在当前代码Run-Eeit Configurations-Programs args 添加--host hadoop100 --port 7777
+        ParameterTool parameterTool = ParameterTool.fromArgs(args);
+        String host = parameterTool.get("host");
+        Integer port = parameterTool.getInt("port");
+
         // 2. 读取文本流
-        DataStreamSource<String> lineDataStream = env.socketTextStream("localhost", 7777);
+        // 在linux上发送数据（命令）：yum install -y nc 执行：nc -lk 7777
+        DataStreamSource<String> lineDataStream = env.socketTextStream(host, port);
         // 3. 装换计算
         SingleOutputStreamOperator<Tuple2<String, Long>> wordOneTuple = lineDataStream.flatMap((String line, Collector<Tuple2<String, Long>> out) -> {
             String[] words = line.split(" ");
